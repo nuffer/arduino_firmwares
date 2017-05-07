@@ -6,25 +6,14 @@
 #include <SPI.h>
 #include "ThingSpeak.h"
 
-
-
 //defined on the sticker 
 byte mac[] = {
   0x90, 0xA2, 0xDA, 0x10, 0xF1, 0x63
 };
 
-
-
-
-
 //Pin mapping
 const int PELTIER_1_A = 3;
 const int PELTIER_1_B = 2;
-
-//const int PELTIER_2_A = 8;
-//const int PELTIER_2_B = 9;
-
-//const int THERMAL_SENSOR_ALIM = 12;
 
 //const int FAN = 12;
 const int LED = 13;//built in
@@ -38,16 +27,16 @@ const int HEATING = 2;
 //objects
 AM2320 thSensor;
 
-
 //variables
 float T_current = 0.00f;
 float T_consigne = 0.00f;
 float H_current = 0.00f;
-//EEPROM address to start reading from
-int eeAddress = 0; 
 int peltierStatus = NO_CURRENT;
 int regulatorPower = 0;
 bool serial_open = false;
+
+//EEPROM address to start reading from
+int eeAddress = 0; 
 
 //timing
 unsigned long lastThingspeakSending = 0;
@@ -85,12 +74,14 @@ void setup() {
     
     //digitalWrite(THERMAL_SENSOR_1_ALIM,LOW);
 
+    /*
     // start the Ethernet connection:
     if (Ethernet.begin(mac) == 0) {
       Serial.println("Failed to configure Ethernet using DHCP");
     }
 
     ThingSpeak.begin(client);
+    */
     delay(50);
 }
 
@@ -112,11 +103,10 @@ void loop() {
 
     checkSerial();
 
-    ///sendDataToWeb();
     sendToThingSpeak();
 
-    ///delayMinutes(1);
-    delay(500);
+    
+    delay(2000);
   
    
 }
@@ -199,14 +189,6 @@ void updateTemperature()
 }
 */
 
-
-/*
- * convert 0-1024 analogue read in celcuis deg.
- */
-float sensorToTemperature(int sensorValue)
-{
-    return sensorValue*0.4883 - 273.15;
-}
 
 void echoInfo()
 {
@@ -362,38 +344,27 @@ void sendToThingSpeak()
 {
   // ThingSpeak will only accept updates every 15 seconds.
   unsigned long currentTime = millis();
-  unsigned long deltaTime = 120000;
-  /*
-  Serial.print("currentTime:");
-  Serial.println(currentTime);
-  Serial.print("lastThingspeak:");
-  Serial.println(lastThingspeakSending);
-  */
+  
+  unsigned long deltaTime = 600000;
+ 
   if((currentTime - lastThingspeakSending) > deltaTime)
   {
+        // start the Ethernet connection:
+        if (Ethernet.begin(mac) == 0) {
+          return;
+          //Serial.println("Failed to configure Ethernet using DHCP");
+        }
+        //restart client to get a valid IP => solve issues of dynamic IP...s 
+        ThingSpeak.begin(client);
+        delay(50);
+
+    
        //Serial.println("send data");
        ThingSpeak.setField(1,T_current);
        ThingSpeak.setField(2,H_current);
        //ThingSpeak.setField(4,T_current);
        //ThingSpeak.setField(3,regulatorPower);
        //ThingSpeak.setField(4,T_consigne);
-       ThingSpeak.writeFields(incubatorChannel, myWriteAPIKey); 
-       lastThingspeakSending = millis();
-       //Serial.println("send data");
-  }
-}
-
-void sendToThingSpeak2()
-{
-  // ThingSpeak will only accept updates every 15 seconds.
-  long deltaTime = millis() -lastThingspeakSending;
-  if(deltaTime > 600000)
-  {
-       //Serial.println("send data");
-       ThingSpeak.setField(1,T_current);
-       ThingSpeak.setField(2,H_current);
-       ThingSpeak.setField(3,regulatorPower);
-       ThingSpeak.setField(4,T_consigne);
        ThingSpeak.writeFields(incubatorChannel, myWriteAPIKey); 
        lastThingspeakSending = millis();
        //Serial.println("send data");
