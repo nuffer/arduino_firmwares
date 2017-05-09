@@ -60,9 +60,8 @@ void setup() {
     Serial.begin(9600);
     serial_open = true;
     delay(50);
-
-  
     
+         
     WiFi.begin(ssid, password);
     
     while (WiFi.status() != WL_CONNECTED) {
@@ -90,7 +89,6 @@ void loop() {
     //updateTemperature();
     T_current = thSensor.getTemperature();
     H_current = thSensor.getHumidity();
-        
     checkSerial();
 
     sendToThingSpeak();
@@ -150,7 +148,7 @@ void sendToThingSpeak()
   unsigned long currentTime = millis();
 
   // 600'000 every 10 minutes
-  unsigned long deltaTime = 150000;
+  unsigned long deltaTime = 600000;
  
   if((currentTime - lastThingspeakSending) > deltaTime)
   {
