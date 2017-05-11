@@ -18,7 +18,6 @@
 #include "ThingSpeak.h"
 #include <ESP8266WiFi.h>
 
-
 const char* ssid     = "N&N@Riex";
 const char* password = "664R-FNRR-CTSY-JANA";
 
@@ -32,15 +31,41 @@ AM2320 thSensor;
 
 //variables
 float T_current = 0.00f;
-float T_consigne = 0.00f;
+float H_consigne = 90.00f;
 float H_current = 0.00f;
 bool serial_open = false;
+
+/*
+const int numReadings = 10;
+int T_index = 0;
+float T_total = 0.0;
+float T_average = 0.0;
+float T_readings[numReadings];
+
+int H_index = 0;
+float H_total = 0.0;
+float H_average = 0.0;
+float H_readings[numReadings];
+*/
 
 //EEPROM address to start reading from
 int eeAddress = 0; 
 
 //timing
 unsigned long lastThingspeakSending = 0;
+unsigned long lastControllerHumidityTime = 0;
+
+//for ESPDUINO
+#define D16 LED_BUILTIN 
+//pins
+#define D0 2
+#define D1 12
+#define D2 3
+#define D3 11
+#define D4 4
+#define D5 5
+#define HUMIDITY_RELAY LED_BUILTIN
+
 
 
 // Initialize the Ethernet client library
@@ -54,7 +79,7 @@ const char * myWriteAPIKey = "T22244IV9PPBVYZG";
 
 void setup() {
     //get the data from memory
-    //EEPROM.get(eeAddress,T_consigne);
+    //EEPROM.get(eeAddress,H_consigne);
     
     //initialize serial communications at 9600 bps:
     Serial.begin(9600);
@@ -63,22 +88,14 @@ void setup() {
     
          
     WiFi.begin(ssid, password);
-    
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
     }
+    delay(50);
 
-    
-   
-
-    /*
-    // start the Ethernet connection:
-    if (Ethernet.begin(mac) == 0) {
-      Serial.println("Failed to configure Ethernet using DHCP");
-    }
-
-    ThingSpeak.begin(client);
-    */
+    pinMode(HUMIDITY_RELAY,OUTPUT);
+    delay(50);
+    digitalWrite(HUMIDITY_RELAY, HIGH);
     delay(50);
 }
 
@@ -86,12 +103,15 @@ void loop() {
 
   
     //get the temperature form sensor
-    //updateTemperature();
     T_current = thSensor.getTemperature();
     H_current = thSensor.getHumidity();
+    //avereage sensor measurement
+    //T_average = temperatureAverage(T_current);
+    //H_average = humidityAverage(H_current);
+    
     checkSerial();
-
     sendToThingSpeak();
+    controlHumidity(H_current);
 
     
     delay(200);
@@ -99,15 +119,45 @@ void loop() {
    
 }
 
+/*
+float temperatureAverage(float T_curr)
+{
+  T_total = T_total - T_readings[T_index];
+  T_readings[T_index] = T_curr;
+  T_total = T_total + T_readings[T_index];
+  T_index = T_index + 1;
+  if (T_index >= numReadings) {
+    T_index = 0;
+  }
+  return T_total/numReadings;
+}
 
+
+float humidityAverage(float H_curr)
+{
+  H_total = H_total - H_readings[H_index];
+  H_readings[H_index] = H_curr;
+  H_total = H_total + H_readings[H_index];
+  H_index = H_index + 1;
+  if (H_index >= numReadings) {
+    H_index = 0;
+  }
+  return H_total/numReadings;
+}
+*/
 void echoInfo()
 {
+    Serial.print("===============");
     Serial.print("T_current = ");
     Serial.println(T_current);
-    Serial.print("T_consigne = ");
-    Serial.println(T_consigne);
+    //Serial.print("T_average = ");
+    //Serial.println(T_average);
+    Serial.print("H_consigne = ");
+    Serial.println(H_consigne);
     Serial.print("H_current = ");
-    Serial.println(H_current);      
+    Serial.println(H_current); 
+    //Serial.print("H_average = ");
+    //Serial.println(H_average);       
 }
 
 
@@ -134,9 +184,9 @@ void checkSerial() {
               return;   
           }
           /* if not the case above, then transform data into new T consigne */
-          T_consigne = data.toFloat();
+          H_consigne = data.toFloat();
           //save in eeprom
-          EEPROM.put(eeAddress,T_consigne);      
+          //EEPROM.put(eeAddress,H_consigne);      
         }
     } 
 }
@@ -174,6 +224,45 @@ void sendToThingSpeak()
        ThingSpeak.writeFields(incubatorChannel, myWriteAPIKey); 
        lastThingspeakSending = millis();
        //Serial.println("send data");
+  }
+}
+
+void controlHumidity(float humidity)
+{
+  // ThingSpeak will only accept updates every 15 seconds.
+  unsigned long currentTime = millis();
+
+  // 12'000 every 2 minutes
+  unsigned long deltaTime = 12000;
+ 
+  if((currentTime - lastControllerHumidityTime) > deltaTime)
+  {
+        /*
+         * Apply logic of humidity control
+         */
+         if(H_consigne > humidity)
+         {
+            /* then humidify */
+            humidification(true);
+         }
+         else
+         {
+            /* then stop humidication */
+            humidification(false);
+         }
+         
+  }
+}
+
+void humidification(bool do_it)
+{
+  if(do_it)
+  {
+    digitalWrite(HUMIDITY_RELAY, HIGH);
+  }
+  else
+  {
+    digitalWrite(HUMIDITY_RELAY, LOW);
   }
 }
 
