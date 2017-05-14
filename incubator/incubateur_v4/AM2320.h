@@ -18,18 +18,18 @@
 
 class AM2320
 {
-  public:
-    AM2320();
-    float getTemperature(void);
-    float getHumidity(void);
-    bool CRCCheck(void);
-  protected:
-    uint8_t data_buffer[8];
-    void read_sensor_readings(void); 
-  private:
-    int temperature;
-    unsigned int humidity;
-    unsigned long CRC16(uint8_t*, uint8_t);
+	public:
+		AM2320();
+		float getTemperature(void);
+		float getHumidity(void);
+		bool CRCCheck(void);
+	protected:
+		uint8_t data_buffer[8];
+		void read_sensor_readings(void); 
+	private:
+		int temperature;
+		unsigned int humidity;
+		unsigned long CRC16(uint8_t*, uint8_t);
 
 };
 

@@ -37,48 +37,51 @@ AM2320::AM2320()
 
 void AM2320::read_sensor_readings()
 {
-  AM2320();
-  Wire.begin();
-  int len = 2+ AM2320_read_count +2;// COMMAND + DATA + REGCOUNT + CRCLSB + CRCMSB
-  Wire.beginTransmission(AM2320_address);
-  //delayMicroseconds(2000); //>1.5ms
-  Wire.endTransmission();
-  delayMicroseconds(2000); //>1.5ms
-  //
-  // Read Command
-  //
-  Wire.beginTransmission(AM2320_address);
-  Wire.write(AM2320_read_sensor_data);
-  Wire.write((uint8_t)AM2320_RH_hb);
-  Wire.write(AM2320_read_count);
-  Wire.endTransmission();
-  //
-  // Waiting
-  //
-  delayMicroseconds(1600); //>1.5ms
-  //
-  // Read
-  //
-  Wire.requestFrom(AM2320_address, len); 
-  for (int i = 0; i < len; i++)
-  {
-    data_buffer[i] = Wire.read();
-    delayMicroseconds(1600); //>1.5ms
-  }
+	AM2320();
+	Wire.begin();
+	int len = 2+ AM2320_read_count +2;// COMMAND + DATA + REGCOUNT + CRCLSB + CRCMSB
+	Wire.beginTransmission(AM2320_address);
+	//delayMicroseconds(2000); //>1.5ms
+	Wire.endTransmission();
+	delayMicroseconds(2000); //>1.5ms
+	//
+	// Read Command
+	//
+	Wire.beginTransmission(AM2320_address);
+	Wire.write(AM2320_read_sensor_data);
+	Wire.write((uint8_t)AM2320_RH_hb);
+	Wire.write(AM2320_read_count);
+	Wire.endTransmission();
+	//
+	// Waiting
+	//
+	delayMicroseconds(1600); //>1.5ms
+	//
+	// Read
+	//
+	Wire.requestFrom(AM2320_address, len); 
+	for (int i = 0; i < len; i++)
+	{
+	  data_buffer[i] = Wire.read();
+	  delayMicroseconds(1600); //>1.5ms
+	}
 }
 float AM2320::getTemperature(void)
 {
-  read_sensor_readings(); 
-  temperature  = data_buffer[4] << 8;
-  temperature += data_buffer[5];
-  return(temperature/10);
+	read_sensor_readings(); 
+	temperature  = data_buffer[4] << 8;
+	temperature += data_buffer[5];
+  float t = temperature/10.0;
+  /* corrrect for negative values */
+  t = ((data_buffer[4] & 0x80) >> 7) == 1 ? t * (-1) : t;
+	return t;
 }
 float AM2320::getHumidity(void)
 {
-  read_sensor_readings(); 
-  humidity     = data_buffer[2] << 8;
-  humidity    += data_buffer[3];
-  return (humidity/10);
+	read_sensor_readings(); 
+	humidity     = data_buffer[2] << 8;
+	humidity    += data_buffer[3];
+	return (humidity/10.0);
 }
     
 unsigned long AM2320::CRC16(uint8_t *ptr, uint8_t length) 
@@ -107,12 +110,12 @@ unsigned long AM2320::CRC16(uint8_t *ptr, uint8_t length)
 } 
 bool AM2320::CRCCheck(void)
 {
-  read_sensor_readings();
-  unsigned long crc=0;
-  crc  = data_buffer[6] << 8;
-  crc += data_buffer[7];
-  
-  if (crc == CRC16(data_buffer, 8))
+	read_sensor_readings();
+	unsigned long crc=0;
+	crc  = data_buffer[6] << 8;
+	crc += data_buffer[7];
+	
+	if (crc == CRC16(data_buffer, 8))
             return true;
         return false;
 }
