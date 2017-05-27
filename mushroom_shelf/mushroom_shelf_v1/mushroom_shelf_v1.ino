@@ -31,7 +31,7 @@ AM2320 thSensor;
 
 //variables
 float T_current = 0.00f;
-float H_consigne = 90.00f;
+float H_consigne = 95.00f;
 float H_current = 0.00f;
 bool serial_open = false;
 
@@ -199,18 +199,9 @@ void sendToThingSpeak()
 
   // 600'000 every 10 minutes
   unsigned long deltaTime = 600000;
- 
-  if((currentTime - lastThingspeakSending) > deltaTime)
+  // if statement acording to: https://www.baldengineer.com/arduino-how-do-you-reset-millis.html
+  if((unsigned long)(currentTime - lastThingspeakSending) >= deltaTime)
   {
-        /*
-        WiFi.begin(ssid, password);
-
-        delay(500);
-        while (WiFi.status() != WL_CONNECTED) {
-          /* exit function if not connected *
-          return;
-        }
-        */
         //restart client to get a valid IP => solve issues of dynamic IP...
         WiFiClient client;
         ThingSpeak.begin(client);
@@ -232,8 +223,10 @@ void controlHumidity(float humidity)
   // ThingSpeak will only accept updates every 15 seconds.
   unsigned long currentTime = millis();
 
-  // 12'000 every 2 minutes
-  unsigned long deltaTime = 12000;
+  // 120'000 every 2 minutes
+  // 300'000 every 5 minutes
+  // 600'000 every 10 minutes
+  unsigned long deltaTime = 60000;
  
   if((currentTime - lastControllerHumidityTime) > deltaTime)
   {
