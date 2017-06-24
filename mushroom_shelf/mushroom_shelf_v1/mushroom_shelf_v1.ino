@@ -21,10 +21,6 @@
 const char* ssid     = "N&N@Riex";
 const char* password = "664R-FNRR-CTSY-JANA";
 
-const char* host = "data.sparkfun.com";
-const char* streamId   = "....................";
-const char* privateKey = "....................";
-
 
 //objects
 AM2320 thSensor;
@@ -34,19 +30,6 @@ float T_current = 0.00f;
 float H_consigne = 95.00f;
 float H_current = 0.00f;
 bool serial_open = false;
-
-/*
-const int numReadings = 10;
-int T_index = 0;
-float T_total = 0.0;
-float T_average = 0.0;
-float T_readings[numReadings];
-
-int H_index = 0;
-float H_total = 0.0;
-float H_average = 0.0;
-float H_readings[numReadings];
-*/
 
 //EEPROM address to start reading from
 int eeAddress = 0; 
@@ -101,63 +84,26 @@ void setup() {
 
 void loop() {
 
-  
-    //get the temperature form sensor
+    //get the data form sensor
     T_current = thSensor.getTemperature();
     H_current = thSensor.getHumidity();
-    //avereage sensor measurement
-    //T_average = temperatureAverage(T_current);
-    //H_average = humidityAverage(H_current);
     
     checkSerial();
     sendToThingSpeak();
     controlHumidity(H_current);
 
-    
-    delay(200);
-  
-   
+    delay(1000);   
 }
 
-/*
-float temperatureAverage(float T_curr)
-{
-  T_total = T_total - T_readings[T_index];
-  T_readings[T_index] = T_curr;
-  T_total = T_total + T_readings[T_index];
-  T_index = T_index + 1;
-  if (T_index >= numReadings) {
-    T_index = 0;
-  }
-  return T_total/numReadings;
-}
-
-
-float humidityAverage(float H_curr)
-{
-  H_total = H_total - H_readings[H_index];
-  H_readings[H_index] = H_curr;
-  H_total = H_total + H_readings[H_index];
-  H_index = H_index + 1;
-  if (H_index >= numReadings) {
-    H_index = 0;
-  }
-  return H_total/numReadings;
-}
-*/
 void echoInfo()
 {
     Serial.print("===============");
     Serial.print("T_current = ");
     Serial.println(T_current);
-    //Serial.print("T_average = ");
-    //Serial.println(T_average);
     Serial.print("H_consigne = ");
     Serial.println(H_consigne);
     Serial.print("H_current = ");
-    Serial.println(H_current); 
-    //Serial.print("H_average = ");
-    //Serial.println(H_average);       
+    Serial.println(H_current);   
 }
 
 
@@ -207,22 +153,19 @@ void sendToThingSpeak()
         ThingSpeak.begin(client);
         delay(50);
 
-    
-       //Serial.println("send data");
        ThingSpeak.setField(1,T_current);
        ThingSpeak.setField(2,H_current);
        
        ThingSpeak.writeFields(incubatorChannel, myWriteAPIKey); 
        lastThingspeakSending = millis();
-       //Serial.println("send data");
   }
 }
 
 void controlHumidity(float humidity)
 {
-  // ThingSpeak will only accept updates every 15 seconds.
   unsigned long currentTime = millis();
 
+  // 60'000 every 1 minutes
   // 120'000 every 2 minutes
   // 300'000 every 5 minutes
   // 600'000 every 10 minutes
@@ -230,20 +173,20 @@ void controlHumidity(float humidity)
  
   if((currentTime - lastControllerHumidityTime) > deltaTime)
   {
-        /*
-         * Apply logic of humidity control
-         */
-         if(H_consigne > humidity)
-         {
-            /* then humidify */
-            humidification(true);
-         }
-         else
-         {
-            /* then stop humidication */
-            humidification(false);
-         }
-         
+      /*
+      * Apply logic of humidity control
+      */
+      if(H_consigne > humidity)
+      {
+          /* then humidify */
+          humidification(true);
+      }
+      else
+      {
+          /* then stop humidication */
+          humidification(false);
+      }
+      lastControllerHumidityTime = millis();
   }
 }
 
