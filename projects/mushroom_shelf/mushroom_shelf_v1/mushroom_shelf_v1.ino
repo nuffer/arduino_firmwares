@@ -47,7 +47,9 @@ unsigned long lastControllerHumidityTime = 0;
 #define D3 11
 #define D4 4
 #define D5 5
-#define HUMIDITY_RELAY LED_BUILTIN
+#define HUMIDITY_RELAY_PIN LED_BUILTIN
+#define HUMIDITY_RELAY_ON LOW
+#define HUMIDITY_RELAY_OFF HIGH
 
 
 
@@ -76,10 +78,12 @@ void setup() {
     }
     delay(50);
 
-    pinMode(HUMIDITY_RELAY,OUTPUT);
-    delay(50);
-    digitalWrite(HUMIDITY_RELAY, HIGH);
-    delay(50);
+    pinMode(HUMIDITY_RELAY_PIN,OUTPUT);
+    delay(10);
+    /* let the time to check if hardware works */
+    digitalWrite(HUMIDITY_RELAY_PIN, HUMIDITY_RELAY_ON);
+    delay(5000);
+    digitalWrite(HUMIDITY_RELAY_PIN, HUMIDITY_RELAY_OFF);
 }
 
 void loop() {
@@ -170,8 +174,7 @@ void controlHumidity(float humidity)
   // 300'000 every 5 minutes
   // 600'000 every 10 minutes
   unsigned long deltaTime = 60000;
- 
-  if((currentTime - lastControllerHumidityTime) > deltaTime)
+  if((unsigned long)(currentTime - lastControllerHumidityTime) >= deltaTime)
   {
       /*
       * Apply logic of humidity control
@@ -194,11 +197,13 @@ void humidification(bool do_it)
 {
   if(do_it)
   {
-    digitalWrite(HUMIDITY_RELAY, HIGH);
+    /* humidifcator on */
+    digitalWrite(HUMIDITY_RELAY_PIN, HUMIDITY_RELAY_ON);
   }
   else
   {
-    digitalWrite(HUMIDITY_RELAY, LOW);
+    /* humidificator off */
+    digitalWrite(HUMIDITY_RELAY_PIN, HUMIDITY_RELAY_OFF);
   }
 }
 
