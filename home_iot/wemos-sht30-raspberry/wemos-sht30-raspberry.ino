@@ -8,11 +8,11 @@
 //#define SERIAL_DEBUG
 
 /* ALL IoT REALEATED */
-String sensor_id = "sht_modlue_A";
+String sensor_id = "sht_module_C";
 char* wifi_ssid     = "N&N@Riex";
 char* wifi_password = "664R-FNRR-CTSY-JANA";
 
-unsigned long sleepSeconds = 30;//5*60;
+unsigned long sleepSeconds = 5*60;
 
 SHTSensor sht;
 float humidity = 0.0f;

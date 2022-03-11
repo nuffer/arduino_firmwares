@@ -10,8 +10,8 @@ boolean activate = false;
 float humidity = 0.0f;
 float temperature = 0.0f;
 
-float humidity_low = 85.0f;
-float humidity_high = 90.0f;
+float humidity_low = 90.0f;
+float humidity_high = 95.0f;
 
 
 void setup() {
